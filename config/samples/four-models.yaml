@@ -1,0 +1,60 @@
+# Four models sharing one GPU. Budgets and SLOs only — never mode.
+apiVersion: inference.gpushare.io/v1alpha1
+kind: ElasticModel
+metadata:
+  name: qwen-chat
+  namespace: llc
+spec:
+  model: Qwen/Qwen2.5-0.5B-Instruct
+  memoryBudget: 1400Mi
+  latencySLO: 60ms
+  maxSessions: 4
+  maxContextTokens: 1024
+  priority: 10
+  ttftSLO: 80ms
+  workload:
+    concurrency: 8
+    expectedOutputTokens: 16
+    requestsPerSwitch: 4
+---
+apiVersion: inference.gpushare.io/v1alpha1
+kind: ElasticModel
+metadata:
+  name: qwen-batch
+  namespace: llc
+spec:
+  model: Qwen/Qwen2.5-0.5B-Instruct
+  memoryBudget: 900Mi
+  latencySLO: 120ms
+  maxSessions: 2
+  maxContextTokens: 1024
+  priority: 5
+  workload:
+    concurrency: 8
+    expectedOutputTokens: 128
+    requestsPerSwitch: 8
+---
+apiVersion: inference.gpushare.io/v1alpha1
+kind: ElasticModel
+metadata:
+  name: smollm-chat
+  namespace: llc
+spec:
+  model: HuggingFaceTB/SmolLM2-360M-Instruct
+  memoryBudget: 800Mi
+  latencySLO: 120ms
+  maxSessions: 2
+  maxContextTokens: 1024
+  priority: 5
+---
+apiVersion: inference.gpushare.io/v1alpha1
+kind: ElasticModel
+metadata:
+  name: too-small
+  namespace: llc
+spec:
+  model: Qwen/Qwen2.5-0.5B-Instruct
+  memoryBudget: 400Mi
+  maxSessions: 1
+  maxContextTokens: 512
+  priority: 1

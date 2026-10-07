@@ -1,0 +1,36 @@
+{
+  "model": "Qwen/Qwen2.5-0.5B-Instruct",
+  "source": "testdata",
+  "process_floor_mb": 250,
+  "num_layers": 24,
+  "layer_cost": {
+    "num_layers": 24,
+    "process_floor_mb": 250,
+    "always_resident_mb": 649.1,
+    "layer_mb": 30.91,
+    "source": "derived"
+  },
+  "elastic": {
+    "driver_mb": 680,
+    "tokens_per_s": 171,
+    "ttft_ms": 46,
+    "step_ms": 5.8,
+    "resident_layers": 1,
+    "batch": 1
+  },
+  "resident": {
+    "driver_mb": 1391,
+    "tokens_per_s": 650,
+    "ttft_ms": 12,
+    "step_ms": 1.5,
+    "resident_layers": 24,
+    "batch": 1
+  },
+  "swap": {
+    "driver_mb": 1391,
+    "tokens_per_s": 650,
+    "ttft_ms": 12,
+    "switch_ms": 80,
+    "batch": 1
+  }
+}

@@ -1,0 +1,35 @@
+# Profiler operand. The operator creates Jobs that run as this account
+# and write elastic-profile-* ConfigMaps. The operator pod has no GPU.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: elastic-profiler
+  namespace: llc
+  labels:
+    app.kubernetes.io/name: gpushare-elastic
+    app.kubernetes.io/component: profiler
+    app.kubernetes.io/managed-by: elastic-operator
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: elastic-profiler
+  namespace: llc
+rules:
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get", "create", "update", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: elastic-profiler
+  namespace: llc
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: elastic-profiler
+subjects:
+  - kind: ServiceAccount
+    name: elastic-profiler
+    namespace: llc

@@ -1,0 +1,36 @@
+{
+  "model": "HuggingFaceTB/SmolLM2-360M-Instruct",
+  "source": "testdata",
+  "process_floor_mb": 250,
+  "num_layers": 32,
+  "layer_cost": {
+    "num_layers": 32,
+    "process_floor_mb": 250,
+    "always_resident_mb": 430.0,
+    "layer_mb": 17.0,
+    "source": "derived"
+  },
+  "elastic": {
+    "driver_mb": 447,
+    "tokens_per_s": 200,
+    "ttft_ms": 30,
+    "step_ms": 5.0,
+    "resident_layers": 1,
+    "batch": 1
+  },
+  "resident": {
+    "driver_mb": 974,
+    "tokens_per_s": 704,
+    "ttft_ms": 10,
+    "step_ms": 1.4,
+    "resident_layers": 32,
+    "batch": 1
+  },
+  "swap": {
+    "driver_mb": 974,
+    "tokens_per_s": 704,
+    "ttft_ms": 10,
+    "switch_ms": 60,
+    "batch": 1
+  }
+}

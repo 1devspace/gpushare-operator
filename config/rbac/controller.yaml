@@ -1,0 +1,79 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: llc
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: elastic-controller
+  namespace: llc
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: elastic-controller
+rules:
+  - apiGroups: ["inference.gpushare.io"]
+    resources: ["elasticmodels"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["inference.gpushare.io"]
+    resources: ["elasticmodels/status"]
+    verbs: ["get", "update", "patch"]
+  - apiGroups: ["batch"]
+    resources: ["jobs"]
+    verbs: ["get", "list", "watch", "create"]
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get", "list", "watch", "create"]
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["create", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: elastic-controller
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: elastic-controller
+subjects:
+  - kind: ServiceAccount
+    name: elastic-controller
+    namespace: llc
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: elastic-controller
+  namespace: llc
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: elastic-controller
+  template:
+    metadata:
+      labels:
+        app: elastic-controller
+    spec:
+      serviceAccountName: elastic-controller
+      containers:
+        - name: controller
+          image: gpushare-elastic:latest
+          imagePullPolicy: IfNotPresent
+          args:
+            - --namespace=llc
+            - --device-budget-mb=4096
+            - --worker-url=http://llc-elastic-worker:8000
+            - --interval=15s
+            - --workspace-pvc=llc-code
+            - --hf-cache-pvc=llc-hf
+            - --gpu-devices
+          env:
+            - name: DEVICE_BUDGET_MB
+              value: "4096"
+          resources:
+            requests: {cpu: "50m", memory: "64Mi"}
+            limits: {cpu: "500m", memory: "256Mi"}
