@@ -9,10 +9,13 @@ metadata:
   name: elastic-controller
   namespace: llc
 ---
+# Everything the controller touches is namespaced, so a Role is enough;
+# no cluster-wide grants.
 apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
+kind: Role
 metadata:
   name: elastic-controller
+  namespace: llc
 rules:
   - apiGroups: ["inference.gpushare.io"]
     resources: ["elasticmodels"]
@@ -23,20 +26,19 @@ rules:
   - apiGroups: ["batch"]
     resources: ["jobs"]
     verbs: ["get", "list", "watch", "create"]
+  # update/patch: WriteProfileConfigMap falls back to Update on AlreadyExists.
   - apiGroups: [""]
     resources: ["configmaps"]
-    verbs: ["get", "list", "watch", "create"]
-  - apiGroups: [""]
-    resources: ["events"]
-    verbs: ["create", "patch"]
+    verbs: ["get", "list", "watch", "create", "update", "patch"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
+kind: RoleBinding
 metadata:
   name: elastic-controller
+  namespace: llc
 roleRef:
   apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
+  kind: Role
   name: elastic-controller
 subjects:
   - kind: ServiceAccount

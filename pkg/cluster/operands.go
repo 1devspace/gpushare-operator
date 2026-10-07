@@ -33,6 +33,11 @@ func (c *Client) LoadProfiles(ctx context.Context, namespace string, modelIDs []
 		if err != nil || doc == nil || !doc.OK() {
 			continue
 		}
+		// Slugged resource names can collide; never adopt a profile that
+		// names a different model.
+		if doc.Model != "" && doc.Model != id {
+			continue
+		}
 		out[id] = *doc
 	}
 	return out, nil

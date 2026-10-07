@@ -95,12 +95,24 @@ func main() {
 		profSpec.HFCachePVC = ""
 	}
 
+	// In periodic mode a transient API error should not kill the Deployment;
+	// log it and retry on the next tick. One-shot mode still exits non-zero.
+	fail := func(err error) bool {
+		fmt.Fprintln(os.Stderr, err)
+		if *interval <= 0 {
+			os.Exit(1)
+		}
+		time.Sleep(*interval)
+		return true
+	}
+
 	var last reconcile.Report
 	for {
 		items, err := loadItems(*fromDir, *namespace, cli)
 		if err != nil {
-			fmt.Fprintln(os.Stderr, err)
-			os.Exit(1)
+			if fail(err) {
+				continue
+			}
 		}
 		ids := make([]string, 0, len(items))
 		for _, it := range items {
@@ -119,8 +131,9 @@ func main() {
 			CreateJobs:     createJobs,
 		})
 		if err != nil {
-			fmt.Fprintln(os.Stderr, err)
-			os.Exit(1)
+			if fail(err) {
+				continue
+			}
 		}
 		printReport(last)
 		if !offline && !*dryRun && cli != nil {

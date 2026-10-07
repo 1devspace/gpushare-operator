@@ -3,6 +3,7 @@ package reconcile
 
 import (
 	"fmt"
+	"math"
 	"os"
 	"path/filepath"
 	"sort"
@@ -283,7 +284,7 @@ func rejected(m v1alpha1.ElasticModel, gen int64, budget float64, reason string)
 }
 
 func round2(v float64) float64 {
-	return float64(int(v*100+0.5)) / 100
+	return math.Round(v*100) / 100
 }
 
 // LoadProfilesFromDir reads cached auto-profiles (no GPU measure).
