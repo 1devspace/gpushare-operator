@@ -6,6 +6,8 @@
 package profiler
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"regexp"
 	"strings"
 	"unicode"
@@ -30,6 +32,8 @@ const (
 var dnsRE = regexp.MustCompile(`[^a-z0-9-]+`)
 
 // ResourceName is a DNS-1123 slug of the model id (Job / ConfigMap suffix).
+// A short hash of the FULL model id is appended so two ids that share a long
+// prefix (or slug identically) can never share a Job or ConfigMap.
 func ResourceName(modelID string) string {
 	s := strings.ToLower(profile.Slug(modelID))
 	s = strings.ReplaceAll(s, "_", "-")
@@ -42,13 +46,14 @@ func ResourceName(modelID string) string {
 	if s == "" {
 		s = "model"
 	}
-	if len(s) > 40 {
-		s = strings.Trim(s[:40], "-")
+	if len(s) > 30 {
+		s = strings.Trim(s[:30], "-")
 	}
 	if s == "" || !unicode.IsLetter(rune(s[0])) {
 		s = "m-" + s
 	}
-	return s
+	sum := sha256.Sum256([]byte(modelID))
+	return s + "-" + hex.EncodeToString(sum[:])[:8]
 }
 
 func JobName(modelID string) string {

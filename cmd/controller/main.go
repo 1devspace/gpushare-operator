@@ -43,8 +43,8 @@ func main() {
 		noProfileJobs = flag.Bool("no-profile-jobs", false, "do not create first-seen profiler Jobs")
 		profilerImage = flag.String("profiler-image", "", "image for the profiler Job")
 		profilerStub  = flag.Bool("profiler-stub", false, "profiler Job writes a stub profile (no GPU)")
-		workspacePVC  = flag.String("workspace-pvc", "llc-code", "PVC with GPUShare-LLM (profile_job.py)")
-		hfCachePVC    = flag.String("hf-cache-pvc", "llc-hf", "PVC for HuggingFace weights")
+		workspacePVC  = flag.String("workspace-pvc", "", "PVC with GPUShare-LLM (profile_job.py); required for real profiling")
+		hfCachePVC    = flag.String("hf-cache-pvc", "", "PVC for HuggingFace weights")
 		gpuDevices    = flag.Bool("gpu-devices", true, "mount /dev/kfd and /dev/dri on the profiler Job")
 		nodeSelector  = flag.String("gpu-node-selector", "", "comma-separated key=value for the profiler Job")
 	)
@@ -95,12 +95,24 @@ func main() {
 		profSpec.HFCachePVC = ""
 	}
 
+	// In periodic mode a transient API error should not kill the Deployment;
+	// log it and retry on the next tick. One-shot mode still exits non-zero.
+	fail := func(err error) bool {
+		fmt.Fprintln(os.Stderr, err)
+		if *interval <= 0 {
+			os.Exit(1)
+		}
+		time.Sleep(*interval)
+		return true
+	}
+
 	var last reconcile.Report
 	for {
 		items, err := loadItems(*fromDir, *namespace, cli)
 		if err != nil {
-			fmt.Fprintln(os.Stderr, err)
-			os.Exit(1)
+			if fail(err) {
+				continue
+			}
 		}
 		ids := make([]string, 0, len(items))
 		for _, it := range items {
@@ -119,8 +131,9 @@ func main() {
 			CreateJobs:     createJobs,
 		})
 		if err != nil {
-			fmt.Fprintln(os.Stderr, err)
-			os.Exit(1)
+			if fail(err) {
+				continue
+			}
 		}
 		printReport(last)
 		if !offline && !*dryRun && cli != nil {

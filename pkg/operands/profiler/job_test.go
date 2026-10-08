@@ -12,10 +12,12 @@ func TestNamesAreDNS1123(t *testing.T) {
 	id := "Qwen/Qwen2.5-0.5B-Instruct"
 	job := JobName(id)
 	cm := ConfigMapName(id)
-	if job != "profile-qwen-qwen2-5-0-5b-instruct" {
+	// Suffix = first 8 hex of sha256 of the full model id: collisions between
+	// long or similarly-slugged ids are impossible.
+	if job != "profile-qwen-qwen2-5-0-5b-instruct-4b05be1d" {
 		t.Fatalf("job %s", job)
 	}
-	if cm != "elastic-profile-qwen-qwen2-5-0-5b-instruct" {
+	if cm != "elastic-profile-qwen-qwen2-5-0-5b-instruct-4b05be1d" {
 		t.Fatalf("cm %s", cm)
 	}
 	if len(job) > 63 || len(cm) > 63 {

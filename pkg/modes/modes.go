@@ -7,6 +7,7 @@ import (
 	"math"
 	"os"
 	"sort"
+	"strings"
 )
 
 var Names = []string{"resident", "swap", "elastic"}
@@ -283,7 +284,7 @@ func Choose(points []Point, args ChooseArgs) Decision {
 		}
 		blocked := true
 		for _, why := range considered {
-			if !(contains(why, "needs") || contains(why, "not measured")) {
+			if !(strings.Contains(why, "needs") || strings.Contains(why, "not measured")) {
 				blocked = false
 				break
 			}
@@ -325,18 +326,6 @@ func Choose(points []Point, args ChooseArgs) Decision {
 		HeadroomMB:          round(usable-best.p.RequiredMB(), 1),
 		Considered:          considered,
 	}
-}
-
-func contains(s, sub string) bool {
-	return len(s) >= len(sub) && (s == sub || len(sub) == 0 ||
-		(func() bool {
-			for i := 0; i+len(sub) <= len(s); i++ {
-				if s[i:i+len(sub)] == sub {
-					return true
-				}
-			}
-			return false
-		})())
 }
 
 func round(v float64, places int) float64 {

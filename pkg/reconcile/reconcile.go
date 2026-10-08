@@ -3,6 +3,7 @@ package reconcile
 
 import (
 	"fmt"
+	"math"
 	"os"
 	"path/filepath"
 	"sort"
@@ -172,6 +173,9 @@ func Run(items []Item, opt Options) Report {
 				assignedMode = "elastic"
 			}
 		}
+		if hasOwn && own.Source == "stub" {
+			reason = "stub profile (not measured): " + reason
+		}
 		batch := decision.Batch
 		if batch == 0 {
 			batch = 1
@@ -283,7 +287,7 @@ func rejected(m v1alpha1.ElasticModel, gen int64, budget float64, reason string)
 }
 
 func round2(v float64) float64 {
-	return float64(int(v*100+0.5)) / 100
+	return math.Round(v*100) / 100
 }
 
 // LoadProfilesFromDir reads cached auto-profiles (no GPU measure).

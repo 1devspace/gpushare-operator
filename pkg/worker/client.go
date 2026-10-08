@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 
 	v1alpha1 "gpushare-elastic/api/v1alpha1"
@@ -26,6 +27,8 @@ type Reject struct {
 	Error  string `json:"error"`
 	Config Config `json:"config"`
 }
+
+var httpClient = &http.Client{Timeout: 10 * time.Second}
 
 // Push posts an assignment and waits until the worker is running it, or
 // returns the worker's own rejection. Empty workerURL skips the call.
@@ -50,24 +53,32 @@ func Push(workerURL, name string, assigned v1alpha1.Assigned, timeout time.Durat
 	if err != nil {
 		return err
 	}
-	client := &http.Client{Timeout: 10 * time.Second}
-	resp, err := client.Post(base+"/admin/config", "application/json", bytes.NewReader(body))
+	resp, err := httpClient.Post(base+"/admin/config", "application/json", bytes.NewReader(body))
 	if err != nil {
 		return fmt.Errorf("worker unreachable: %w", err)
 	}
+	snippet, _ := io.ReadAll(io.LimitReader(resp.Body, 512))
 	io.Copy(io.Discard, resp.Body)
 	resp.Body.Close()
+	if resp.StatusCode >= 300 {
+		return fmt.Errorf("worker refused the assignment: %s: %s",
+			resp.Status, strings.TrimSpace(string(snippet)))
+	}
 
+	// Only trust a config or rejection that names this exact model; the
+	// worker echoes the pushed name, so an empty name is never a match.
 	deadline := time.Now().Add(timeout)
 	for time.Now().Before(deadline) {
 		cur, err := Get(base)
 		if err != nil {
 			return fmt.Errorf("worker unreachable: %w", err)
 		}
-		if cur.Mode == assigned.Mode && cur.Batch == assigned.Batch && cur.ResidentLayers == assigned.ResidentLayers {
+		if cur.Name == name && cur.Mode == assigned.Mode &&
+			cur.Batch == assigned.Batch && cur.ResidentLayers == assigned.ResidentLayers {
 			return nil
 		}
-		if cur.LastRejection != nil && cur.LastRejection.Config.Mode == assigned.Mode {
+		if cur.LastRejection != nil && cur.LastRejection.Config.Mode == assigned.Mode &&
+			cur.LastRejection.Config.Name == name {
 			if cur.LastRejection.Error == "" {
 				return fmt.Errorf("worker rejected the assignment")
 			}
@@ -80,11 +91,16 @@ func Push(workerURL, name string, assigned v1alpha1.Assigned, timeout time.Durat
 
 func Get(workerURL string) (Config, error) {
 	var cur Config
-	resp, err := http.Get(trimSlash(workerURL) + "/admin/config")
+	resp, err := httpClient.Get(trimSlash(workerURL) + "/admin/config")
 	if err != nil {
 		return cur, err
 	}
 	defer resp.Body.Close()
+	if resp.StatusCode >= 300 {
+		snippet, _ := io.ReadAll(io.LimitReader(resp.Body, 512))
+		return cur, fmt.Errorf("worker config endpoint: %s: %s",
+			resp.Status, strings.TrimSpace(string(snippet)))
+	}
 	err = json.NewDecoder(resp.Body).Decode(&cur)
 	return cur, err
 }

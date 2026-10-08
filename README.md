@@ -1,14 +1,15 @@
 # gpushare-elastic
 
-Go operator for [GPUShare-LLM](../GPUShare-LLM/README.md). The user writes an
-**`ElasticModel`** (`model` + `memoryBudget` + optional SLO). They never set
-`mode`. This binary assigns **resident / swap / elastic**.
+Go operator for **GPUShare-LLM** (sibling repo; clone it next to this one as
+`../GPUShare-LLM`). The user writes an **`ElasticModel`** (`model` +
+`memoryBudget` + optional SLO). They never set `mode`. This binary assigns
+**resident / swap / elastic**.
 
 It does not load weights or talk to the GPU. The Python profiler and worker
 in GPUShare-LLM do that. This repo watches the API, creates the first-seen
 Job, reads the profile ConfigMap, and writes `status.assigned`.
 
-**How to run it:** [GPUShare-LLM/guide.md](../GPUShare-LLM/guide.md)
+**How to run it:** `guide.md` in the GPUShare-LLM repo.
 
 ---
 
