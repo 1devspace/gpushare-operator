@@ -33,9 +33,10 @@ func (c *Client) LoadProfiles(ctx context.Context, namespace string, modelIDs []
 		if err != nil || doc == nil || !doc.OK() {
 			continue
 		}
-		// Slugged resource names can collide; never adopt a profile that
-		// names a different model.
-		if doc.Model != "" && doc.Model != id {
+		// Never adopt a profile that does not name this exact model; an
+		// empty doc.Model is not trusted either (names are hashed, but a
+		// handwritten ConfigMap could still be wrong).
+		if doc.Model != id {
 			continue
 		}
 		out[id] = *doc
@@ -59,7 +60,18 @@ func (c *Client) EnsureProfilerJob(ctx context.Context, namespace, modelID strin
 	if err != nil {
 		return profiler.JobStatus{}, err
 	}
-	return profiler.StatusOf(got), nil
+	st := profiler.StatusOf(got)
+	if st.FailedCompletely() {
+		// Retry automatically: remove the failed Job now; the next reconcile
+		// recreates it (each attempt still bounded by the Job's backoffLimit).
+		prop := metav1.DeletePropagationBackground
+		if derr := c.kube.BatchV1().Jobs(namespace).Delete(ctx, want.Name,
+			metav1.DeleteOptions{PropagationPolicy: &prop}); derr != nil && !apierrors.IsNotFound(derr) {
+			return st, derr
+		}
+		return profiler.JobStatus{Name: want.Name}, nil
+	}
+	return st, nil
 }
 
 func (c *Client) WriteProfileConfigMap(ctx context.Context, namespace, modelID string, doc profile.Doc) error {

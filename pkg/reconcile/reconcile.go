@@ -173,6 +173,9 @@ func Run(items []Item, opt Options) Report {
 				assignedMode = "elastic"
 			}
 		}
+		if hasOwn && own.Source == "stub" {
+			reason = "stub profile (not measured): " + reason
+		}
 		batch := decision.Batch
 		if batch == 0 {
 			batch = 1

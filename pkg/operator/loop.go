@@ -89,7 +89,7 @@ func Run(ctx context.Context, kube Kube, items []reconcile.Item, opt Options) (r
 		}
 		if st.FailedCompletely() {
 			pending = append(pending, degrade(it, budget,
-				fmt.Sprintf("profiler Job %s failed; delete it to retry", st.Name), now))
+				fmt.Sprintf("profiler Job %s failed; it will be recreated on the next reconcile", st.Name), now))
 			continue
 		}
 		reason := fmt.Sprintf("measuring %s on this GPU (Job %s)", id, profiler.JobName(id))

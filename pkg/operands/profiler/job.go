@@ -91,7 +91,9 @@ func BuildJob(namespace, modelID string, spec Spec) *batchv1.Job {
 	}
 
 	cmd, args := jobCommand(spec)
-	priv := spec.GPUDevices && !spec.Stub
+	// Devices (and privilege) only when there is real profiling code to run;
+	// the no-PVC fallback publishes a stub and needs neither.
+	priv := spec.GPUDevices && !spec.Stub && spec.WorkspacePVC != ""
 	container := corev1.Container{
 		Name:            Component,
 		Image:           spec.Image,
@@ -163,7 +165,7 @@ func jobCommand(spec Spec) ([]string, []string) {
 }
 
 func mountGPU(pod *corev1.PodSpec, spec Spec) {
-	if spec.Stub || !spec.GPUDevices {
+	if spec.Stub || !spec.GPUDevices || spec.WorkspacePVC == "" {
 		return
 	}
 	devices := []struct{ name, path string }{

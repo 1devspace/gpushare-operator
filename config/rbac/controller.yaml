@@ -23,9 +23,10 @@ rules:
   - apiGroups: ["inference.gpushare.io"]
     resources: ["elasticmodels/status"]
     verbs: ["get", "update", "patch"]
+  # delete: failed profiler Jobs are removed so the next reconcile retries.
   - apiGroups: ["batch"]
     resources: ["jobs"]
-    verbs: ["get", "list", "watch", "create"]
+    verbs: ["get", "list", "watch", "create", "delete"]
   # update/patch: WriteProfileConfigMap falls back to Update on AlreadyExists.
   - apiGroups: [""]
     resources: ["configmaps"]
