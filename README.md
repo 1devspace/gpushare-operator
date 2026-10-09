@@ -11,6 +11,10 @@ Job, reads the profile ConfigMap, and writes `status.assigned`.
 
 **How to run it:** `guide.md` in the GPUShare-LLM repo.
 
+**KubeCon EU 2027:**
+- [docs/cfp-kubecon-eu-2027.md](docs/cfp-kubecon-eu-2027.md) — Sessionize paste pack (session + poster)
+- [docs/kubecon-submission.md](docs/kubecon-submission.md) — measured tables and reproduce commands
+
 ---
 
 ## Layout
@@ -22,6 +26,7 @@ gpushare-elastic/
 ├── pkg/                    Reconcile, profile, cluster client, operands
 ├── config/                 CRD, RBAC, profiler SA, sample CRs
 ├── testdata/profiles/      Checked-in tables for offline runs
+├── docs/                   KubeCon CFP pack and measured writeup
 └── e2e/                    envtest, live GPU proof, k3s script
 ```
 
@@ -42,4 +47,5 @@ gpushare-elastic/
 | `config/operands/` | Profiler ServiceAccount |
 | `config/samples/` | Example `ElasticModel`s (no `mode`) |
 | `testdata/profiles/` | Offline `--profile-dir` tables |
+| `docs/` | KubeCon CFP fields + measured results |
 | `e2e/` | API-only test, `LLC_LIVE_PROOF` GPU test, `cluster_proof.sh` |
