@@ -146,7 +146,7 @@ Paste after the repos are pushed. Until then, attach the local writeup.
 
 - Measured results (every table has a command): `docs/kubecon-submission.md`
 - Design: `docs/elastic-occupancy.md`
-- How to run: `guide.md`
+- How to run: `docs/guide.md`
 - Engine repo: https://github.com/1devspace/k8s-llm-layer-compute
 - Operator repo: https://github.com/1devspace/gpushare-operator
 
@@ -335,4 +335,4 @@ Supporting writeups already in this repo:
 
 - [kubecon-submission.md](kubecon-submission.md) — tables and commands
 - [elastic-occupancy.md](elastic-occupancy.md) — design
-- [guide.md](../guide.md) — how to run
+- [guide.md](guide.md) — how to run
